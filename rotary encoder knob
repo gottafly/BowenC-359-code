@@ -1,0 +1,57 @@
+// Rotary Encoder Inputs
+ #define chB 4
+ #define chA 5
+ 
+ int counter = 0;
+ int currentStateCLK;
+ int previousStateCLK;
+
+ String encdir ="";
+
+unsigned long time;
+
+ void setup() {
+   
+   // Set encoder pins as inputs  
+   pinMode (chB,INPUT);
+   pinMode (chA,INPUT);
+   
+   // Setup Serial Monitor
+   Serial.begin (9600);
+   
+   // Read the initial state of chB
+   // Assign to previousStateCLK variable
+   previousStateCLK = digitalRead(chB);
+
+   time=millis();
+
+ }
+
+ void loop() {
+ 
+  // Read the current state of chB
+   currentStateCLK = digitalRead(chB);
+   
+   // If the previous and the current state of the chB are different then a pulse has occured
+   if (currentStateCLK != previousStateCLK){
+       
+     // If the chA state is different than the chB state then
+     // the encoder is rotating counterclockwise
+     if (digitalRead(chA) != currentStateCLK) {
+       counter --;
+       encdir ="CCW";
+       
+     } else {
+       // Encoder is rotating clockwise
+       counter ++;
+       encdir ="CW";
+       
+     }
+     if(millis() - time >100){
+     Serial.println(counter);
+     time=millis();
+   }
+   }
+   // Update previousStateCLK with the current state
+   previousStateCLK = currentStateCLK;
+ }
