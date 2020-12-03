@@ -1,6 +1,8 @@
 /*
 Program uses adafruit bno055 and Seeeduino XIAO
 conections are 5v GND SDA and SCL
+Created on: Dec 1, 2020
+Author: BowenC
 */
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
