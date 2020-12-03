@@ -42,13 +42,13 @@ void loop(void)
   bno.getEvent(&event);
 
 current = event.orientation.x, 1;
-   
+   //sends new value if orreatation changes
     if(current != previous){
      Serial.println(current, 1);
      previous=current;
     time=millis();
     }
-
+//sends current value every 1000 missliseconds if value is not updated. This is done to avoid timeout
  if(millis() - time >1000){
      Serial.println(current, 1);
      time=millis();
