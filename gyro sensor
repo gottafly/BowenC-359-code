@@ -18,14 +18,14 @@ void setup(void)
 {
  
    sensors_event_t event;
-   
+   //start serial
   Serial.begin(9600);
-  /* Initialise the sensor */
+  //start sensor
   if(!bno.begin())
   {
     while(1);
   }
-
+//Declare variables 
  previous = event.orientation.x, 1;
 
   delay(1000);
