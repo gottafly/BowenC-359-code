@@ -1,0 +1,122 @@
+#include <Wire.h>
+#include <math.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
+#include <utility/imumaths.h>
+
+/*used for setting up I2c adress of Adafrit Bno055 board*/
+Adafruit_BNO055 bno = Adafruit_BNO055(-1, 0x28); 
+Adafruit_BNO055 bno2 = Adafruit_BNO055(-1, 0x29);
+
+/*varibles used to do calculations for Bno boards*/
+unsigned long time; 
+
+double current;
+double previous;
+
+double BnA;
+double BnB;
+
+double subtracted;
+double startoff;
+double offset;
+double output;
+
+bool BnALarger;
+
+void setup(void)
+{
+  Serial.begin(115200);
+
+  /* Initialize sensorA */
+  if (!bno.begin())
+  {
+    /* Tells if there is a Bno error*/
+    Serial.print("BNOA not detected. Check wiring or I2C adress!");
+    while (1);
+  }
+
+  /* Initialize sensorB*/
+  if (!bno2.begin())
+  {
+    /*  Tells if there is a Bno2 error */
+    Serial.print("BNO2 not detected. Check wiring or I2C adress!");
+    while (1);
+  }
+
+  time = millis(); //sets varible time to current program time
+
+  delay(100);
+
+  bno2.setExtCrystalUse(true);
+  bno.setExtCrystalUse(true);
+
+/*This section ajust for the random start up value of the second bno*/
+  do {
+    /* Get a new sensor event 2*/
+    sensors_event_t event2;
+    bno2.getEvent(&event2);
+    sensors_event_t event;
+    bno.getEvent(&event);
+
+    startoff = event2.orientation.x, 4;
+    delay(100);
+    offset = startoff;
+    previous = startoff;
+
+
+  } while (startoff == 0);
+
+}
+void loop(void)
+{
+  /* Get a new sensor event */
+  sensors_event_t event;
+  bno.getEvent(&event);
+
+  /* Get a new sensor event 2*/
+  sensors_event_t event2;
+  bno2.getEvent(&event2);
+
+  /*sets BnA and BnB varibles to current senser value*/
+  BnA = event.orientation.x, 4;
+  BnB = event2.orientation.x, 4;
+
+  /*setting offset to BNB */
+  BnB -= offset;
+  /*negitive value function*/
+  if ( BnB < 0) {
+    BnB += 360;
+  }
+
+  /*This section of the code uses the two bnos staked on top of each other to correct for the drift that they both have. But becuse they are oppisite directions we can calculate the actual dirrection the robot is pointed*/
+  subtracted = abs(BnA - BnB);
+  if ( subtracted > 170) {
+    if (BnA > BnB) {
+      output = BnB - ((360 - subtracted) / 2);//larger value equals BNA, subtract from BNB
+    }
+    else {
+      output = BnA - ((360 - subtracted) / 2);//larger value equals BNB, subtracs from BNA
+    }
+    if ( output < 0) { //negitive value function
+      output += 360;
+    }
+  }
+  else {
+    output = (BnA + BnB) / 2; // normal error corection
+  }
+
+  current = output;
+
+/*prints output value over serial every time the value changes or every 500 milliseconds to avoid serial port timeout*/
+  if (current != previous) {
+    Serial.println(output);
+    previous = current;
+    time = millis();
+  }
+
+  if (millis() - time > 500) {
+    Serial.println(output);
+    time = millis();
+  }
+}
